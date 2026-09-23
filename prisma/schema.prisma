@@ -97,3 +97,27 @@ model NewsletterSubscriber {
   @@index([isActive])
   @@map("newsletter_subscribers")
 }
+
+enum NewsStatus {
+  PUBLISHED
+  DISABLED
+}
+
+model News {
+  id            String     @id @default(cuid())
+  title         String
+  tag           String
+  pillar        String
+  note          String     @db.Text
+  body          String?    @db.Text
+  imageUrl      String?
+  status        NewsStatus @default(PUBLISHED)
+  publishedDate DateTime
+  createdBy     String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status])
+  @@index([publishedDate])
+  @@map("news")
+}

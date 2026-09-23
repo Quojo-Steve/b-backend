@@ -1,3 +1,4 @@
+import path from 'path';
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,6 +16,7 @@ import { openApiDocument } from './docs/openapi';
 import { RootController } from './controllers/RootController';
 import { authenticate } from './middlewares/auth.middleware';
 import { container } from './composition/container';
+import { newsRouter } from './routes/news.routes';
 
 /**
  * Wraps Express app construction in a class so middleware/route wiring is
@@ -52,6 +54,9 @@ export class App {
     // caller identity). See requestLogger.middleware.ts for why this runs
     // before auth yet still captures req.user correctly.
     this.instance.use(requestLoggerMiddleware);
+    // Serves uploaded news images. Only the file itself is public -
+    // creating/replacing one still requires authentication.
+    this.instance.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
   }
 
   /**
@@ -88,6 +93,7 @@ export class App {
     this.instance.post('/logout', container.authController.logout);
 
     this.instance.use('/partners', partnersRouter);
+    this.instance.use('/news', newsRouter);
   }
 
   private registerErrorHandling(): void {

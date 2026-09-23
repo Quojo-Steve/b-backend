@@ -20,6 +20,11 @@ import { TrainingApplicationService } from '../services/TrainingApplicationServi
 import { NewsletterService } from '../services/NewsletterService';
 import { HealthController } from '../controllers/HealthController';
 import { AuthController } from '../controllers/AuthController';
+import { InMemoryNewsRepository } from '../repositories/InMemoryNewsRepository';
+import { PrismaNewsRepository } from '../repositories/PrismaNewsRepository';
+import { INewsRepository } from '../repositories/INewsRepository';
+import { NewsService } from '../services/NewsService';
+import { NewsController } from '../controllers/NewsController';
 import { PartnersController } from '../controllers/PartnersController';
 import { TrainingsController } from '../controllers/TrainingsController';
 import { NewslettersController } from '../controllers/NewslettersController';
@@ -68,6 +73,10 @@ class CompositionRoot {
     ? new PrismaNewsletterRepository(this.prismaService.client)
     : new InMemoryNewsletterRepository();
 
+  public readonly newsRepository: INewsRepository = this.prismaService
+    ? new PrismaNewsRepository(this.prismaService.client)
+    : new InMemoryNewsRepository();
+
   // Cross-cutting utilities
   public readonly tokenService = new TokenService();
 
@@ -91,12 +100,15 @@ class CompositionRoot {
     this.emailService,
   );
 
+  public readonly newsService = new NewsService(this.newsRepository);
+
   // Controllers
   public readonly healthController = new HealthController();
   public readonly authController = new AuthController(this.authService);
   public readonly partnersController = new PartnersController(this.partnerService);
   public readonly trainingsController = new TrainingsController(this.trainingApplicationService);
   public readonly newslettersController = new NewslettersController(this.newsletterService);
+  public readonly newsController = new NewsController(this.newsService);
 }
 
 logger.info(`Persistence layer: ${env.useDatabase ? 'MySQL (Prisma)' : 'in-memory'}`);
