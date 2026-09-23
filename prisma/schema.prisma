@@ -1,0 +1,99 @@
+// ------------------------------------------------------------------
+// BRACE Digital Platform - Prisma schema
+//
+// Mirrors the domain shapes already used across the codebase
+// (src/types/user.types.ts, partner.types.ts, training.types.ts).
+// Enum members intentionally use SCREAMING_CASE (Prisma convention);
+// the repository layer (src/repositories/Prisma*Repository.ts) maps
+// between these and the application's own lowercase domain enums, so
+// no other part of the codebase needs to know MySQL is involved.
+// ------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  WEB_MANAGER
+  TECHNICAL_REVIEWER
+  COUNTRY_COORDINATOR
+  CONSORTIUM_PARTNER
+  APPLICANT
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  passwordHash       String
+  fullName           String
+  role               UserRole @default(APPLICANT)
+  countryAffiliation String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Partner {
+  id              String  @id
+  name            String
+  country         String
+  role            String
+  isTechnicalLead Boolean @default(false)
+  websiteUrl      String?
+
+  @@map("partners")
+}
+
+model TrainingApplication {
+  id                String            @id @default(cuid())
+  applicantFullName String
+  applicantEmail    String
+  country           String
+  organisation      String?
+  motivation        String            @db.Text
+  status            ApplicationStatus @default(SUBMITTED)
+  reviewedBy        String?
+  reviewNotes       String?           @db.Text
+  submittedAt       DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([status])
+  @@index([country])
+  @@map("training_applications")
+}
+
+model Newsletter {
+  id        String    @id @default(cuid())
+  title     String
+  bodyHtml  String    @db.Text
+  createdBy String
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("newsletters")
+}
+
+model NewsletterSubscriber {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  subscribedAt  DateTime @default(now())
+  isActive      Boolean  @default(true)
+
+  @@index([isActive])
+  @@map("newsletter_subscribers")
+}
