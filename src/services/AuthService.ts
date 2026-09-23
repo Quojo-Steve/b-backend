@@ -61,12 +61,12 @@ export class AuthService {
       email: dto.email,
       passwordHash,
       fullName: dto.fullName,
-      role: UserRole.APPLICANT,
+      role: UserRole.WEB_MANAGER,
       countryAffiliation: dto.countryAffiliation,
       isActive: true,
     });
 
-    this.logger.info('New applicant account registered', { userId: user.id });
+    this.logger.info('New WEB MANAGER account registered', { userId: user.id });
 
     return this.buildLoginResult(user);
   }
