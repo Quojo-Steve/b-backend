@@ -31,6 +31,8 @@ export const openApiDocument = {
     { name: 'Auth', description: 'Account registration, login, and session info' },
     { name: 'Partners', description: 'BRACE consortium partner directory' },
     { name: 'Trainings', description: 'Policy Expert Training Programme applications' },
+    { name: 'News', description: 'Published and CMS-managed news content' },
+    { name: 'Newsletters', description: 'Newsletter subscription and delivery management' },
   ],
   components: {
     securitySchemes: {
@@ -112,6 +114,105 @@ export const openApiDocument = {
           role: { type: 'string' },
           isTechnicalLead: { type: 'boolean' },
           websiteUrl: { type: 'string', nullable: true },
+        },
+      },
+      Newsletter: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'nl_123' },
+          title: { type: 'string', example: 'Quarterly update' },
+          bodyHtml: { type: 'string', example: '<p>Hello world</p>' },
+          createdBy: { type: 'string', example: 'usr_web_manager' },
+          sentAt: { type: 'string', format: 'date-time', nullable: true },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      NewsletterSubscriber: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'sub_123' },
+          email: { type: 'string', format: 'email', example: 'reader@example.org' },
+          subscribedAt: { type: 'string', format: 'date-time' },
+          isActive: { type: 'boolean', example: true },
+        },
+      },
+      CreateNewsletterRequest: {
+        type: 'object',
+        required: ['title', 'bodyHtml'],
+        properties: {
+          title: { type: 'string', minLength: 3, example: 'Quarterly impact update' },
+          bodyHtml: {
+            type: 'string',
+            minLength: 10,
+            example: '<h2>Quarterly update</h2><p>We are publishing our latest progress.</p>',
+          },
+        },
+      },
+      NewsStatus: {
+        type: 'string',
+        enum: ['published', 'disabled'],
+      },
+      News: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'news_123' },
+          title: { type: 'string', example: 'A new BRACE partnership' },
+          tag: { type: 'string', example: 'Tanzania' },
+          pillar: { type: 'string', example: 'Country support' },
+          note: { type: 'string', example: 'Short summary for the homepage card.' },
+          body: { type: 'string', nullable: true },
+          imageUrl: { type: 'string', nullable: true, example: '/uploads/news/172-abc.jpg' },
+          status: { $ref: '#/components/schemas/NewsStatus' },
+          publishedDate: { type: 'string', format: 'date-time' },
+          createdBy: { type: 'string', example: 'usr_web_manager' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateNewsRequest: {
+        type: 'object',
+        required: ['title', 'tag', 'pillar', 'note'],
+        properties: {
+          title: { type: 'string', minLength: 3, example: 'Regional briefing launched' },
+          tag: { type: 'string', minLength: 2, example: 'Tanzania' },
+          pillar: { type: 'string', minLength: 2, example: 'Country support' },
+          note: { type: 'string', minLength: 5, maxLength: 500, example: 'Short summary shown on the homepage.' },
+          body: { type: 'string', example: 'Full story text...' },
+          publishedDate: { type: 'string', format: 'date-time', example: '2026-09-23T12:00:00.000Z' },
+          image: { type: 'string', format: 'binary' },
+        },
+      },
+      UpdateNewsRequest: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', minLength: 3 },
+          tag: { type: 'string', minLength: 2 },
+          pillar: { type: 'string', minLength: 2 },
+          note: { type: 'string', minLength: 5, maxLength: 500 },
+          body: { type: 'string' },
+          publishedDate: { type: 'string', format: 'date-time' },
+          image: { type: 'string', format: 'binary' },
+        },
+      },
+      UpdateNewsStatusRequest: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: { $ref: '#/components/schemas/NewsStatus' },
+        },
+      },
+      SubscribeRequest: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'reader@example.org' },
+        },
+      },
+      UnsubscribeRequest: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email', example: 'reader@example.org' },
         },
       },
       TrainingApplicationStatus: {
@@ -521,6 +622,421 @@ export const openApiDocument = {
           '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
           '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+    },
+    '/newsletters/subscribe': {
+      post: {
+        tags: ['Newsletters'],
+        summary: 'Subscribe an email address to the newsletter',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/SubscribeRequest' } },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Subscriber created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: { subscriber: { $ref: '#/components/schemas/NewsletterSubscriber' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+        },
+      },
+    },
+    '/newsletters/unsubscribe': {
+      post: {
+        tags: ['Newsletters'],
+        summary: 'Unsubscribe an email address from the newsletter',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UnsubscribeRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Unsubscription acknowledged.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { nullable: true },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+        },
+      },
+    },
+    '/newsletters': {
+      post: {
+        tags: ['Newsletters'],
+        summary: 'Create a new newsletter draft/campaign',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/CreateNewsletterRequest' } },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Newsletter created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: { newsletter: { $ref: '#/components/schemas/Newsletter' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+      get: {
+        tags: ['Newsletters'],
+        summary: 'List all newsletters (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': {
+            description: 'List of newsletters.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        newsletters: { type: 'array', items: { $ref: '#/components/schemas/Newsletter' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/newsletters/subscribers': {
+      get: {
+        tags: ['Newsletters'],
+        summary: 'List all newsletter subscribers (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': {
+            description: 'List of subscribers.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        subscribers: {
+                          type: 'array',
+                          items: { $ref: '#/components/schemas/NewsletterSubscriber' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/newsletters/{id}': {
+      get: {
+        tags: ['Newsletters'],
+        summary: 'Get a single newsletter by id',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The newsletter.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: { newsletter: { $ref: '#/components/schemas/Newsletter' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/newsletters/{id}/send': {
+      post: {
+        tags: ['Newsletters'],
+        summary: 'Send a newsletter to all active subscribers',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'Newsletter sent successfully.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { status: { type: 'string', example: 'success' }, data: { type: 'object' } },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/news': {
+      get: {
+        tags: ['News'],
+        summary: 'List published news items for the public feed',
+        responses: {
+          '200': {
+            description: 'Published news items.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { type: 'array', items: { $ref: '#/components/schemas/News' } } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['News'],
+        summary: 'Create a new news item (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/CreateNewsRequest' } },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'News item created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/news/{id}': {
+      get: {
+        tags: ['News'],
+        summary: 'Get a published news item by id',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The news item.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      patch: {
+        tags: ['News'],
+        summary: 'Update a news item (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/UpdateNewsRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'News item updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/news/admin/all': {
+      get: {
+        tags: ['News'],
+        summary: 'List all news items, including disabled ones',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': {
+            description: 'All news items.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { type: 'array', items: { $ref: '#/components/schemas/News' } } } },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/news/admin/{id}': {
+      get: {
+        tags: ['News'],
+        summary: 'Get a single news item for admin editing',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The admin view of the news item.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/news/{id}/status': {
+      patch: {
+        tags: ['News'],
+        summary: 'Toggle a news item between published and disabled states',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdateNewsStatusRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Status updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
         },
       },
     },

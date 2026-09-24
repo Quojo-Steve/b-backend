@@ -9,13 +9,16 @@ const { newsController } = container;
 
 const contentAdminRoles = [UserRole.SUPER_ADMIN, UserRole.WEB_MANAGER];
 
+// Admin (web manager / super admin) - content management.
+// Register the protected admin-specific routes before the generic /:id catch-all
+// so they are not swallowed by the public read route for unauthenticated users.
+router.get('/admin/all', authenticate, authorize(...contentAdminRoles), newsController.listAll);
+router.get('/admin/:id', authenticate, authorize(...contentAdminRoles), newsController.getByIdForAdmin);
+
 // Public - the homepage/news-feed read side. Only published items.
 router.get('/', newsController.listPublished);
 router.get('/:id', newsController.getPublishedById);
 
-// Admin (web manager / super admin) - content management.
-router.get('/admin/all', authenticate, authorize(...contentAdminRoles), newsController.listAll);
-router.get('/admin/:id', authenticate, authorize(...contentAdminRoles), newsController.getByIdForAdmin);
 router.post('/', authenticate, authorize(...contentAdminRoles), uploadNewsImage, newsController.create);
 router.patch('/:id', authenticate, authorize(...contentAdminRoles), uploadNewsImage, newsController.update);
 // Replaces delete - see NewsService.setStatus.
