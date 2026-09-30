@@ -28,9 +28,14 @@ import { NewsController } from '../controllers/NewsController';
 import { PartnersController } from '../controllers/PartnersController';
 import { TrainingsController } from '../controllers/TrainingsController';
 import { NewslettersController } from '../controllers/NewslettersController';
+import { PressReleaseController } from '../controllers/PressReleaseController';
 import { env } from '../config/env.config';
 import { PrismaService } from '../config/prisma';
 import { Logger } from '../utils/Logger';
+import { IPressReleaseRepository } from '../repositories/IPressReleaseRepository';
+import { InMemoryPressReleaseRepository } from '../repositories/InMemoryPressReleaseRepository';
+import { PrismaPressReleaseRepository } from '../repositories/PrismaPressReleaseRepository';
+import { PressReleaseService } from '../services/PressReleaseService';
 
 const logger = new Logger('CompositionRoot');
 
@@ -77,6 +82,10 @@ class CompositionRoot {
     ? new PrismaNewsRepository(this.prismaService.client)
     : new InMemoryNewsRepository();
 
+  public readonly pressReleaseRepository: IPressReleaseRepository = this.prismaService
+    ? new PrismaPressReleaseRepository(this.prismaService.client)
+    : new InMemoryPressReleaseRepository();
+
   // Cross-cutting utilities
   public readonly tokenService = new TokenService();
 
@@ -101,6 +110,7 @@ class CompositionRoot {
   );
 
   public readonly newsService = new NewsService(this.newsRepository);
+  public readonly pressReleaseService = new PressReleaseService(this.pressReleaseRepository);
 
   // Controllers
   public readonly healthController = new HealthController();
@@ -109,6 +119,7 @@ class CompositionRoot {
   public readonly trainingsController = new TrainingsController(this.trainingApplicationService);
   public readonly newslettersController = new NewslettersController(this.newsletterService);
   public readonly newsController = new NewsController(this.newsService);
+  public readonly pressReleaseController = new PressReleaseController(this.pressReleaseService);
 }
 
 logger.info(`Persistence layer: ${env.useDatabase ? 'MySQL (Prisma)' : 'in-memory'}`);

@@ -23,8 +23,7 @@ export const openApiDocument = {
     },
   },
   servers: [
-    { url: '/api/v1', description: 'Current API version (recommended)' },
-    { url: '/api', description: 'Alias of the current version' },
+    { url: '/api', description: 'Current version' }
   ],
   tags: [
     { name: 'Health', description: 'Liveness and readiness checks' },
@@ -32,6 +31,7 @@ export const openApiDocument = {
     { name: 'Partners', description: 'BRACE consortium partner directory' },
     { name: 'Trainings', description: 'Policy Expert Training Programme applications' },
     { name: 'News', description: 'Published and CMS-managed news content' },
+    { name: 'Press Releases', description: 'Published and CMS-managed press releases' },
     { name: 'Newsletters', description: 'Newsletter subscription and delivery management' },
   ],
   components: {
@@ -91,6 +91,17 @@ export const openApiDocument = {
           countryAffiliation: { type: 'string' },
         },
       },
+      CreateUserRequest: {
+        type: 'object',
+        required: ['email', 'password', 'fullName', 'role'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', format: 'password', minLength: 8 },
+          fullName: { type: 'string', minLength: 2 },
+          role: { $ref: '#/components/schemas/UserRole' },
+          countryAffiliation: { type: 'string' },
+        },
+      },
       AuthResult: {
         type: 'object',
         properties: {
@@ -111,9 +122,43 @@ export const openApiDocument = {
           id: { type: 'string', example: 'agenda-tanzania' },
           name: { type: 'string', example: 'AGENDA Tanzania' },
           country: { type: 'string', example: 'Tanzania' },
-          role: { type: 'string' },
-          isTechnicalLead: { type: 'boolean' },
+          about: { type: 'string', example: 'Consortium lead' },
+          description: { type: 'string', example: 'Consortium lead and funding recipient.' },
           websiteUrl: { type: 'string', nullable: true },
+          logoUrl: { type: 'string', nullable: true, example: '/uploads/partners/172-abc.png' },
+          isActive: { type: 'boolean', example: true },
+        },
+      },
+      CreatePartnerRequest: {
+        type: 'object',
+        required: ['name', 'country', 'about', 'description'],
+        properties: {
+          name: { type: 'string', minLength: 2, example: 'AGENDA Tanzania' },
+          country: { type: 'string', minLength: 2, example: 'Tanzania' },
+          about: { type: 'string', minLength: 2, example: 'Consortium lead' },
+          description: { type: 'string', example: 'Consortium lead and funding recipient.' },
+          websiteUrl: { type: 'string', format: 'uri', example: 'https://example.org' },
+          logo: { type: 'string', format: 'binary', description: 'JPEG, PNG, WEBP, or GIF; maximum 5MB.' },
+          isActive: { type: 'boolean', example: true },
+        },
+      },
+      UpdatePartnerRequest: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 2 },
+          country: { type: 'string', minLength: 2 },
+          about: { type: 'string', minLength: 2 },
+          description: { type: 'string' },
+          websiteUrl: { type: 'string', format: 'uri' },
+          logo: { type: 'string', format: 'binary', description: 'JPEG, PNG, WEBP, or GIF; maximum 5MB.' },
+          isActive: { type: 'boolean' },
+        },
+      },
+      UpdatePartnerStatusRequest: {
+        type: 'object',
+        required: ['isActive'],
+        properties: {
+          isActive: { type: 'boolean', example: false },
         },
       },
       Newsletter: {
@@ -152,6 +197,10 @@ export const openApiDocument = {
         type: 'string',
         enum: ['published', 'disabled'],
       },
+      PressReleaseStatus: {
+        type: 'string',
+        enum: ['published', 'disabled'],
+      },
       News: {
         type: 'object',
         properties: {
@@ -164,6 +213,21 @@ export const openApiDocument = {
           imageUrl: { type: 'string', nullable: true, example: '/uploads/news/172-abc.jpg' },
           status: { $ref: '#/components/schemas/NewsStatus' },
           publishedDate: { type: 'string', format: 'date-time' },
+          createdBy: { type: 'string', example: 'usr_web_manager' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      PressRelease: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'pr_123' },
+          title: { type: 'string', example: 'BRACE launches new policy brief' },
+          summary: { type: 'string', nullable: true, example: 'Short overview of the release.' },
+          documentUrl: { type: 'string', nullable: true, example: '/uploads/press-releases/172-abc.pdf' },
+          documentName: { type: 'string', nullable: true, example: 'brief.pdf' },
+          status: { $ref: '#/components/schemas/PressReleaseStatus' },
+          releaseDate: { type: 'string', format: 'date-time' },
           createdBy: { type: 'string', example: 'usr_web_manager' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
@@ -199,6 +263,32 @@ export const openApiDocument = {
         required: ['status'],
         properties: {
           status: { $ref: '#/components/schemas/NewsStatus' },
+        },
+      },
+      CreatePressReleaseRequest: {
+        type: 'object',
+        required: ['title'],
+        properties: {
+          title: { type: 'string', minLength: 3, example: 'BRACE launches new policy brief' },
+          summary: { type: 'string', maxLength: 1000, example: 'A short summary...' },
+          releaseDate: { type: 'string', format: 'date-time', example: '2026-09-23T12:00:00.000Z' },
+          document: { type: 'string', format: 'binary' },
+        },
+      },
+      UpdatePressReleaseRequest: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', minLength: 3 },
+          summary: { type: 'string', maxLength: 1000 },
+          releaseDate: { type: 'string', format: 'date-time' },
+          document: { type: 'string', format: 'binary' },
+        },
+      },
+      UpdatePressReleaseStatusRequest: {
+        type: 'object',
+        required: ['status'],
+        properties: {
+          status: { $ref: '#/components/schemas/PressReleaseStatus' },
         },
       },
       SubscribeRequest: {
@@ -376,6 +466,36 @@ export const openApiDocument = {
       },
     },
     '/auth/users': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Create a user account for any role',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin. This endpoint may create any UserRole account. WEB_MANAGER = web_manager, // Day-to-day CMS/content administration, TECHNICAL_REVIEWER = technical_reviewer, // Oeko-Institut - technical/scientific, COUNTRY_COORDINATOR = country_coordinator, // Per-country content & applications, CONSORTIUM_PARTNER = consortium_partner, // Partner-restricted area access, APPLICANT = applicant, // Training programme applicants',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateUserRequest' } } },
+        },
+        responses: {
+          '201': {
+            description: 'User account created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { user: { $ref: '#/components/schemas/PublicUser' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
       get: {
         tags: ['Auth'],
         summary: 'List all user accounts (staff only)',
@@ -412,7 +532,7 @@ export const openApiDocument = {
     '/partners': {
       get: {
         tags: ['Partners'],
-        summary: 'List all BRACE consortium partners',
+        summary: 'List active BRACE consortium partners',
         responses: {
           '200': {
             description: 'List of partners.',
@@ -433,6 +553,68 @@ export const openApiDocument = {
               },
             },
           },
+        },
+      },
+      post: {
+        tags: ['Partners'],
+        summary: 'Create a consortium partner',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/CreatePartnerRequest' } },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Partner created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { partner: { $ref: '#/components/schemas/Partner' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/partners/admin/all': {
+      get: {
+        tags: ['Partners'],
+        summary: 'List all partners, including disabled partners',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': {
+            description: 'List of all partners.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        partners: { type: 'array', items: { $ref: '#/components/schemas/Partner' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
         },
       },
     },
@@ -488,6 +670,78 @@ export const openApiDocument = {
               },
             },
           },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      patch: {
+        tags: ['Partners'],
+        summary: 'Edit a consortium partner',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'mri-ghana' },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/UpdatePartnerRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Partner updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { partner: { $ref: '#/components/schemas/Partner' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/partners/{id}/status': {
+      patch: {
+        tags: ['Partners'],
+        summary: 'Enable or disable a consortium partner',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager. Set isActive to false to disable a partner.',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'mri-ghana' },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdatePartnerStatusRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Partner status updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { partner: { $ref: '#/components/schemas/Partner' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
           '404': { $ref: '#/components/responses/NotFound' },
         },
       },
@@ -1028,6 +1282,205 @@ export const openApiDocument = {
                   properties: {
                     status: { type: 'string', example: 'success' },
                     data: { type: 'object', properties: { news: { $ref: '#/components/schemas/News' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/press-releases': {
+      get: {
+        tags: ['Press Releases'],
+        summary: 'List published press releases for the public feed',
+        responses: {
+          '200': {
+            description: 'Published press releases.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressReleases: { type: 'array', items: { $ref: '#/components/schemas/PressRelease' } } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['Press Releases'],
+        summary: 'Create a new press release (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/CreatePressReleaseRequest' } },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Press release created.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressRelease: { $ref: '#/components/schemas/PressRelease' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/press-releases/{id}': {
+      get: {
+        tags: ['Press Releases'],
+        summary: 'Get a published press release by id',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The press release.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressRelease: { $ref: '#/components/schemas/PressRelease' } } },
+                  },
+                },
+              },
+            },
+          },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      patch: {
+        tags: ['Press Releases'],
+        summary: 'Update a press release (admin only)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'multipart/form-data': { schema: { $ref: '#/components/schemas/UpdatePressReleaseRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Press release updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressRelease: { $ref: '#/components/schemas/PressRelease' } } },
+                  },
+                },
+              },
+            },
+          },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/press-releases/admin/all': {
+      get: {
+        tags: ['Press Releases'],
+        summary: 'List all press releases, including disabled ones',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': {
+            description: 'All press releases.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressReleases: { type: 'array', items: { $ref: '#/components/schemas/PressRelease' } } } },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/press-releases/admin/{id}': {
+      get: {
+        tags: ['Press Releases'],
+        summary: 'Get a single press release for admin editing',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': {
+            description: 'The admin view of the press release.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressRelease: { $ref: '#/components/schemas/PressRelease' } } },
+                  },
+                },
+              },
+            },
+          },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/press-releases/{id}/status': {
+      patch: {
+        tags: ['Press Releases'],
+        summary: 'Toggle a press release between published and disabled states',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/UpdatePressReleaseStatusRequest' } },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Status updated.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    status: { type: 'string', example: 'success' },
+                    data: { type: 'object', properties: { pressRelease: { $ref: '#/components/schemas/PressRelease' } } },
                   },
                 },
               },

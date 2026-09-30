@@ -5,6 +5,7 @@ import { partnersRouter } from './partners.routes';
 import { trainingsRouter } from './trainings.routes';
 import { newslettersRouter } from './newsletters.routes';
 import { newsRouter } from './news.routes';
+import { pressReleasesRouter } from './pressReleases.routes';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.use('/partners', partnersRouter);
 router.use('/trainings', trainingsRouter);
 router.use('/newsletters', newslettersRouter);
 router.use('/news', newsRouter);
+router.use('/press-releases', pressReleasesRouter);
 
 // Future modules mount here following the same pattern, e.g.:
 // router.use('/resources', resourcesRouter);

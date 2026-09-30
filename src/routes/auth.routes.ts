@@ -18,5 +18,6 @@ router.get(
   authorize(UserRole.SUPER_ADMIN, UserRole.TECHNICAL_REVIEWER),
   authController.listUsers,
 );
+router.post('/users', authenticate, authorize(UserRole.SUPER_ADMIN), authController.createUser);
 
 export const authRouter = router;

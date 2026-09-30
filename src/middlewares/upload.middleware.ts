@@ -3,12 +3,21 @@ import path from 'path';
 import { randomUUID } from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../errors/AppError';
-import { NEWS_UPLOAD_DIR } from '../config/uploads.config';
+import {
+  NEWS_UPLOAD_DIR,
+  PARTNER_UPLOAD_DIR,
+  PRESS_RELEASE_UPLOAD_DIR,
+} from '../config/uploads.config';
 
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const ALLOWED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-const storage = multer.diskStorage({
+const newsImageStorage = multer.diskStorage({
   destination: (_req, _file, callback) => {
     callback(null, NEWS_UPLOAD_DIR);
   },
@@ -18,23 +27,67 @@ const storage = multer.diskStorage({
   },
 });
 
-function fileFilter(
+const pressReleaseDocumentStorage = multer.diskStorage({
+  destination: (_req, _file, callback) => {
+    callback(null, PRESS_RELEASE_UPLOAD_DIR);
+  },
+  filename: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    callback(null, `${Date.now()}-${randomUUID().slice(0, 8)}${extension}`);
+  },
+});
+
+const partnerLogoStorage = multer.diskStorage({
+  destination: (_req, _file, callback) => {
+    callback(null, PARTNER_UPLOAD_DIR);
+  },
+  filename: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    callback(null, `${Date.now()}-${randomUUID().slice(0, 8)}${extension}`);
+  },
+});
+
+function imageFileFilter(
   _req: Request,
   file: Express.Multer.File,
   callback: multer.FileFilterCallback,
 ): void {
-  if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+  if (!ALLOWED_IMAGE_MIME_TYPES.has(file.mimetype)) {
     callback(new ValidationError('Image must be a JPEG, PNG, WEBP, or GIF file.'));
     return;
   }
   callback(null, true);
 }
 
+function documentFileFilter(
+  _req: Request,
+  file: Express.Multer.File,
+  callback: multer.FileFilterCallback,
+): void {
+  if (!ALLOWED_DOCUMENT_MIME_TYPES.has(file.mimetype)) {
+    callback(new ValidationError('Press release document must be a PDF, DOC, or DOCX file.'));
+    return;
+  }
+  callback(null, true);
+}
+
 const singleImageUpload = multer({
-  storage,
-  fileFilter,
+  storage: newsImageStorage,
+  fileFilter: imageFileFilter,
   limits: { fileSize: MAX_FILE_SIZE_BYTES },
 }).single('image');
+
+const singleDocumentUpload = multer({
+  storage: pressReleaseDocumentStorage,
+  fileFilter: documentFileFilter,
+  limits: { fileSize: MAX_FILE_SIZE_BYTES },
+}).single('document');
+
+const singlePartnerLogoUpload = multer({
+  storage: partnerLogoStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: MAX_FILE_SIZE_BYTES },
+}).single('logo');
 
 /**
  * `.single('image')` - expects the file under the form field name
@@ -56,6 +109,34 @@ export function uploadNewsImage(req: Request, res: Response, next: NextFunction)
     }
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
       next(new ValidationError('Image must be 5MB or smaller.'));
+      return;
+    }
+    next(err);
+  });
+}
+
+export function uploadPressReleaseDocument(req: Request, res: Response, next: NextFunction): void {
+  singleDocumentUpload(req, res, (err: unknown) => {
+    if (!err) {
+      next();
+      return;
+    }
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      next(new ValidationError('Document must be 5MB or smaller.'));
+      return;
+    }
+    next(err);
+  });
+}
+
+export function uploadPartnerLogo(req: Request, res: Response, next: NextFunction): void {
+  singlePartnerLogoUpload(req, res, (err: unknown) => {
+    if (!err) {
+      next();
+      return;
+    }
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+      next(new ValidationError('Partner logo must be 5MB or smaller.'));
       return;
     }
     next(err);

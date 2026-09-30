@@ -1,0 +1,2 @@
+ALTER TABLE `partners`
+ADD COLUMN `logoUrl` VARCHAR(191) NULL;

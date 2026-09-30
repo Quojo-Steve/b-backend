@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from './user.types';
 
 export const loginSchema = z.object({
   email: z.string().email('A valid email address is required.'),
@@ -21,3 +22,9 @@ export const registerSchema = z.object({
 });
 
 export type RegisterDto = z.infer<typeof registerSchema>;
+
+export const createUserSchema = registerSchema.extend({
+  role: z.nativeEnum(UserRole),
+});
+
+export type CreateUserDto = z.infer<typeof createUserSchema>;

@@ -17,6 +17,7 @@ import { RootController } from './controllers/RootController';
 import { authenticate } from './middlewares/auth.middleware';
 import { container } from './composition/container';
 import { newsRouter } from './routes/news.routes';
+import { pressReleasesRouter } from './routes/pressReleases.routes';
 
 /**
  * Wraps Express app construction in a class so middleware/route wiring is
@@ -56,7 +57,17 @@ export class App {
     this.instance.use(requestLoggerMiddleware);
     // Serves uploaded news images. Only the file itself is public -
     // creating/replacing one still requires authentication.
-    this.instance.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+    // helmet's default Cross-Origin-Resource-Policy (same-origin) would stop
+    // the frontend, served from another origin, from embedding these files,
+    // so it is relaxed for this public, read-only path only.
+    this.instance.use(
+      '/uploads',
+      (_req, res, next) => {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        next();
+      },
+      express.static(path.join(process.cwd(), 'uploads')),
+    );
   }
 
   /**
@@ -94,6 +105,7 @@ export class App {
 
     this.instance.use('/partners', partnersRouter);
     this.instance.use('/news', newsRouter);
+    this.instance.use('/press-releases', pressReleasesRouter);
   }
 
   private registerErrorHandling(): void {

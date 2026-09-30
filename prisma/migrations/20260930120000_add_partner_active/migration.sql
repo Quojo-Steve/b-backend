@@ -1,0 +1,2 @@
+ALTER TABLE `partners`
+ADD COLUMN `isActive` BOOLEAN NOT NULL DEFAULT true;

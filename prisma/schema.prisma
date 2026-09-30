@@ -10,7 +10,13 @@
 // ------------------------------------------------------------------
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" covers whatever platform you run `npx prisma generate` on
+  // locally. The second target is required because the container is
+  // node:20-alpine (musl libc, OpenSSL 3.x) - Prisma's own detection of
+  // this inside Alpine is unreliable, so we pin it instead of hoping it
+  // guesses right.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -49,12 +55,14 @@ model User {
 }
 
 model Partner {
-  id              String  @id
-  name            String
-  country         String
-  role            String
-  isTechnicalLead Boolean @default(false)
-  websiteUrl      String?
+  id          String  @id
+  name        String
+  country     String
+  about       String
+  description String  @db.Text
+  websiteUrl  String?
+  logoUrl     String?
+  isActive    Boolean @default(true)
 
   @@map("partners")
 }
@@ -120,4 +128,26 @@ model News {
   @@index([status])
   @@index([publishedDate])
   @@map("news")
+}
+
+enum PressReleaseStatus {
+  PUBLISHED
+  DISABLED
+}
+
+model PressRelease {
+  id           String             @id @default(cuid())
+  title        String
+  summary      String?
+  documentUrl  String?
+  documentName String?
+  status       PressReleaseStatus @default(PUBLISHED)
+  releaseDate  DateTime
+  createdBy    String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([status])
+  @@index([releaseDate])
+  @@map("press_releases")
 }

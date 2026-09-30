@@ -3,7 +3,7 @@ import { IUserRepository } from '../repositories/IUserRepository';
 import { TokenService } from '../utils/TokenService';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../errors/AppError';
 import { IUser, PublicUser, UserRole } from '../types/user.types';
-import { RegisterDto } from '../types/auth.schemas';
+import { CreateUserDto, RegisterDto } from '../types/auth.schemas';
 import { Logger } from '../utils/Logger';
 
 export interface LoginResult {
@@ -46,10 +46,22 @@ export class AuthService {
 
   /**
    * Public self-registration always creates an APPLICANT account.
-   * Any other role must be provisioned by a super admin via a future
-   * admin-only user-management endpoint.
    */
   public async register(dto: RegisterDto): Promise<LoginResult> {
+    const user = await this.createAccount(dto, UserRole.APPLICANT);
+    return this.buildLoginResult(user);
+  }
+
+  /** Provision any role through the super-admin-only user management route. */
+  public async createUser(dto: CreateUserDto): Promise<PublicUser> {
+    const user = await this.createAccount(dto, dto.role);
+    return this.toPublicUser(user);
+  }
+
+  private async createAccount(
+    dto: RegisterDto,
+    role: UserRole,
+  ): Promise<IUser> {
     const existing = await this.userRepository.findByEmail(dto.email);
     if (existing) {
       throw new ConflictError('An account with this email already exists.');
@@ -61,14 +73,13 @@ export class AuthService {
       email: dto.email,
       passwordHash,
       fullName: dto.fullName,
-      role: UserRole.WEB_MANAGER,
+      role,
       countryAffiliation: dto.countryAffiliation,
       isActive: true,
     });
 
-    this.logger.info('New WEB MANAGER account registered', { userId: user.id });
-
-    return this.buildLoginResult(user);
+    this.logger.info('User account created', { userId: user.id, role });
+    return user;
   }
 
   public async getPublicUserById(id: string): Promise<PublicUser> {

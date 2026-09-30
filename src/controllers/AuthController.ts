@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService';
-import { loginSchema, registerSchema } from '../types/auth.schemas';
+import { createUserSchema, loginSchema, registerSchema } from '../types/auth.schemas';
 import { UnauthorizedError } from '../errors/AppError';
 import { parseOrThrow } from '../utils/validateRequest';
 
@@ -30,6 +30,16 @@ export class AuthController {
       const result = await this.authService.register(dto);
 
       res.status(201).json({ status: 'success', data: result });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const dto = parseOrThrow(createUserSchema, req.body);
+      const user = await this.authService.createUser(dto);
+      res.status(201).json({ status: 'success', data: { user } });
     } catch (error) {
       next(error);
     }

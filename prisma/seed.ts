@@ -55,64 +55,64 @@ async function main(): Promise<void> {
     id: string;
     name: string;
     country: string;
-    role: string;
-    isTechnicalLead: boolean;
+    about: string;
+    description: string;
   }> = [
     {
       id: 'agenda-tanzania',
       name: 'AGENDA Tanzania',
       country: 'Tanzania',
-      role: 'Consortium lead and funding recipient; overall content responsibility',
-      isTechnicalLead: false,
+      about: 'Consortium lead',
+      description: 'Consortium lead and funding recipient; overall content responsibility',
     },
     {
       id: 'oeko-institut',
       name: 'Oeko-Institut e.V.',
       country: 'Germany',
-      role: 'Technical and scientific leadership; quality control',
-      isTechnicalLead: true,
+      about: 'Technical and scientific leadership',
+      description: 'Technical and scientific leadership; quality control',
     },
     {
       id: 'pan-ethiopia',
       name: 'PAN Ethiopia',
       country: 'Ethiopia',
-      role: 'Country partner - country support and reporting',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner - country support and reporting',
     },
     {
       id: 'sradev-nigeria',
       name: 'SRADev Nigeria',
       country: 'Nigeria',
-      role: 'Country partner - country support and reporting',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner - country support and reporting',
     },
     {
       id: 'mri-ghana',
       name: 'MRI Ghana',
       country: 'Ghana',
-      role: 'Country partner - country support and reporting',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner - country support and reporting',
     },
     {
       id: 'crepd-cameroon',
       name: 'CREPD Cameroon',
       country: 'Cameroon',
-      role: 'Country partner; French-language editorial advisor',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner; French-language editorial advisor',
     },
     {
       id: 'areco-rwanda',
       name: 'ARECO Rwanda',
       country: 'Rwanda',
-      role: 'Country partner; French-language editorial advisor',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner; French-language editorial advisor',
     },
     {
       id: 'cure-malawi',
       name: 'CURE Malawi',
       country: 'Malawi',
-      role: 'Country partner - country support and reporting',
-      isTechnicalLead: false,
+      about: 'Country partner',
+      description: 'Country partner - country support and reporting',
     },
   ];
 

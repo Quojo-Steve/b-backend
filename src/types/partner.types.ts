@@ -2,7 +2,9 @@ export interface IPartner {
   id: string;
   name: string;
   country: string;
-  role: string;
-  isTechnicalLead: boolean;
+  about: string;
+  description: string;
   websiteUrl?: string;
+  logoUrl?: string;
+  isActive: boolean;
 }

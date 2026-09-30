@@ -12,8 +12,14 @@ import fs from 'fs';
  * the same path.
  */
 export const NEWS_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'news');
+export const PRESS_RELEASE_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'press-releases');
+export const PARTNER_UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'partners');
 
 fs.mkdirSync(NEWS_UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(PRESS_RELEASE_UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(PARTNER_UPLOAD_DIR, { recursive: true });
 
 /** Public URL prefix these files are served under - see app.ts. */
 export const NEWS_UPLOAD_URL_PREFIX = '/uploads/news';
+export const PRESS_RELEASE_UPLOAD_URL_PREFIX = '/uploads/press-releases';
+export const PARTNER_UPLOAD_URL_PREFIX = '/uploads/partners';
