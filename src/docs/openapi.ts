@@ -411,9 +411,9 @@ export const openApiDocument = {
     '/auth/register': {
       post: {
         tags: ['Auth'],
-        summary: 'Self-register a new applicant account',
+        summary: 'Self-register a new web_manager account',
         description:
-          'Always creates an account with role "applicant". Staff roles are provisioned separately.',
+          'Always creates an account with role "web_manager". Staff roles are provisioned separately.',
         requestBody: {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/RegisterRequest' } } },

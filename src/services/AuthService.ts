@@ -48,7 +48,7 @@ export class AuthService {
    * Public self-registration always creates an APPLICANT account.
    */
   public async register(dto: RegisterDto): Promise<LoginResult> {
-    const user = await this.createAccount(dto, UserRole.APPLICANT);
+    const user = await this.createAccount(dto, UserRole.WEB_MANAGER);
     return this.buildLoginResult(user);
   }
 

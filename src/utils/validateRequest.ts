@@ -1,4 +1,4 @@
-import { ZodSchema } from 'zod';
+import { ZodType, ZodTypeDef } from 'zod';
 import { ValidationError } from '../errors/AppError';
 
 /**
@@ -6,8 +6,7 @@ import { ValidationError } from '../errors/AppError';
  * uniformly by errorHandlerMiddleware) on failure instead of returning a
  * result object every call site has to check.
  */
-export function parseOrThrow<T>(schema: ZodSchema<T>, input: unknown): T {
-  const result = schema.safeParse(input);
+export function parseOrThrow<T>(schema: ZodType<T, ZodTypeDef, unknown>, input: unknown): T {  const result = schema.safeParse(input);
   if (!result.success) {
     const message = result.error.issues[0]?.message ?? 'Invalid request payload.';
     throw new ValidationError(message);
