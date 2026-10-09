@@ -15,10 +15,15 @@ export class NewsService {
   public async create(dto: CreateNewsDto, imageUrl: string | undefined, createdBy: string): Promise<INews> {
     const news = await this.newsRepository.create({
       title: dto.title,
+      titleFr: dto.titleFr,
       tag: dto.tag,
+      tagFr: dto.tagFr,
       pillar: dto.pillar,
+      pillarFr: dto.pillarFr,
       note: dto.note,
+      noteFr: dto.noteFr,
       body: dto.body,
+      bodyFr: dto.bodyFr,
       imageUrl,
       status: NewsStatus.PUBLISHED,
       publishedDate: (dto.publishedDate ?? new Date()).toISOString(),

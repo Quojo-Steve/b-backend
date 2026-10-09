@@ -56,63 +56,81 @@ async function main(): Promise<void> {
     name: string;
     country: string;
     about: string;
+    aboutFr: string;
     description: string;
+    descriptionFr: string;
   }> = [
     {
       id: 'agenda-tanzania',
       name: 'AGENDA Tanzania',
       country: 'Tanzania',
       about: 'Consortium lead',
+      aboutFr: 'Consortium lead',
       description: 'Consortium lead and funding recipient; overall content responsibility',
+      descriptionFr: 'Consortium lead and funding recipient; overall content responsibility',
     },
     {
       id: 'oeko-institut',
       name: 'Oeko-Institut e.V.',
       country: 'Germany',
       about: 'Technical and scientific leadership',
+      aboutFr: 'Technical and scientific leadership',
       description: 'Technical and scientific leadership; quality control',
+      descriptionFr: 'Technical and scientific leadership; quality control',
     },
     {
       id: 'pan-ethiopia',
       name: 'PAN Ethiopia',
       country: 'Ethiopia',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner - country support and reporting',
+      descriptionFr: 'Country partner - country support and reporting',
     },
     {
       id: 'sradev-nigeria',
       name: 'SRADev Nigeria',
       country: 'Nigeria',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner - country support and reporting',
+      descriptionFr: 'Country partner - country support and reporting',
     },
     {
       id: 'mri-ghana',
       name: 'MRI Ghana',
       country: 'Ghana',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner - country support and reporting',
+      descriptionFr: 'Country partner - country support and reporting',
     },
     {
       id: 'crepd-cameroon',
       name: 'CREPD Cameroon',
       country: 'Cameroon',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner; French-language editorial advisor',
+      descriptionFr: 'Country partner; French-language editorial advisor',
     },
     {
       id: 'areco-rwanda',
       name: 'ARECO Rwanda',
       country: 'Rwanda',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner; French-language editorial advisor',
+      descriptionFr: 'Country partner; French-language editorial advisor',
     },
     {
       id: 'cure-malawi',
       name: 'CURE Malawi',
       country: 'Malawi',
       about: 'Country partner',
+      aboutFr: 'Country partner',
       description: 'Country partner - country support and reporting',
+      descriptionFr: 'Country partner - country support and reporting',
     },
   ];
 

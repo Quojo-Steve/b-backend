@@ -26,10 +26,15 @@ export class PrismaNewsRepository implements INewsRepository {
     const record = await this.prisma.news.create({
       data: {
         title: data.title,
+        titleFr: data.titleFr,
         tag: data.tag,
+        tagFr: data.tagFr,
         pillar: data.pillar,
+        pillarFr: data.pillarFr,
         note: data.note,
+        noteFr: data.noteFr,
         body: data.body,
+        bodyFr: data.bodyFr,
         imageUrl: data.imageUrl,
         status: PrismaNewsRepository.STATUS_TO_PRISMA[data.status],
         publishedDate: new Date(data.publishedDate),
@@ -65,6 +70,11 @@ export class PrismaNewsRepository implements INewsRepository {
           ...(updates.pillar !== undefined && { pillar: updates.pillar }),
           ...(updates.note !== undefined && { note: updates.note }),
           ...(updates.body !== undefined && { body: updates.body }),
+          ...(updates.titleFr !== undefined && { titleFr: updates.titleFr }),
+          ...(updates.tagFr !== undefined && { tagFr: updates.tagFr }),
+          ...(updates.pillarFr !== undefined && { pillarFr: updates.pillarFr }),
+          ...(updates.noteFr !== undefined && { noteFr: updates.noteFr }),
+          ...(updates.bodyFr !== undefined && { bodyFr: updates.bodyFr }),
           ...(updates.imageUrl !== undefined && { imageUrl: updates.imageUrl }),
           ...(updates.status !== undefined && {
             status: PrismaNewsRepository.STATUS_TO_PRISMA[updates.status],
@@ -89,6 +99,11 @@ export class PrismaNewsRepository implements INewsRepository {
     pillar: string;
     note: string;
     body: string | null;
+    titleFr: string;
+    tagFr: string;
+    pillarFr: string;
+    noteFr: string;
+    bodyFr: string | null;
     imageUrl: string | null;
     status: PrismaNewsStatus;
     publishedDate: Date;
@@ -103,6 +118,11 @@ export class PrismaNewsRepository implements INewsRepository {
       pillar: record.pillar,
       note: record.note,
       body: record.body ?? undefined,
+      titleFr: record.titleFr,
+      tagFr: record.tagFr,
+      pillarFr: record.pillarFr,
+      noteFr: record.noteFr,
+      bodyFr: record.bodyFr ?? undefined,
       imageUrl: record.imageUrl ?? undefined,
       status: PrismaNewsRepository.STATUS_TO_DOMAIN[record.status],
       publishedDate: record.publishedDate.toISOString(),

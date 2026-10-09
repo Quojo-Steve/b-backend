@@ -9,7 +9,9 @@ export const createPartnerSchema = z.object({
   name: z.string().min(2, 'Name is required.'),
   country: z.string().min(2, 'Country is required.'),
   about: z.string().min(2, 'About is required.'),
+  aboutFr: z.string().min(2, 'French about is required.'),
   description: z.string().min(1, 'Description is required.'),
+  descriptionFr: z.string().min(1, 'French description is required.'),
   websiteUrl: z.string().url('Website URL must be valid.').optional(),
   isActive: booleanField.optional(),
 });

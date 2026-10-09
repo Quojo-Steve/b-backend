@@ -20,7 +20,9 @@ export class PressReleaseService {
   ): Promise<IPressRelease> {
     const pressRelease = await this.pressReleaseRepository.create({
       title: dto.title,
+      titleFr: dto.titleFr,
       summary: dto.summary,
+      summaryFr: dto.summaryFr,
       documentUrl,
       documentName,
       status: PressReleaseStatus.PUBLISHED,

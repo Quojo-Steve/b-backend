@@ -19,7 +19,9 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
     const record = await this.prisma.pressRelease.create({
       data: {
         title: data.title,
+        titleFr: data.titleFr,
         summary: data.summary ?? null,
+        summaryFr: data.summaryFr ?? null,
         documentUrl: data.documentUrl ?? null,
         documentName: data.documentName ?? null,
         status: PrismaPressReleaseRepository.STATUS_TO_PRISMA[data.status],
@@ -55,6 +57,8 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
         data: {
           ...(updates.title !== undefined && { title: updates.title }),
           ...(updates.summary !== undefined && { summary: updates.summary ?? null }),
+          ...(updates.titleFr !== undefined && { titleFr: updates.titleFr }),
+          ...(updates.summaryFr !== undefined && { summaryFr: updates.summaryFr ?? null }),
           ...(updates.documentUrl !== undefined && { documentUrl: updates.documentUrl ?? null }),
           ...(updates.documentName !== undefined && { documentName: updates.documentName ?? null }),
           ...(updates.status !== undefined && {
@@ -76,6 +80,8 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
     id: string;
     title: string;
     summary: string | null;
+    titleFr: string;
+    summaryFr: string | null;
     documentUrl: string | null;
     documentName: string | null;
     status: PrismaPressReleaseStatus;
@@ -88,6 +94,8 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
       id: record.id,
       title: record.title,
       summary: record.summary ?? undefined,
+      titleFr: record.titleFr,
+      summaryFr: record.summaryFr ?? undefined,
       documentUrl: record.documentUrl ?? undefined,
       documentName: record.documentName ?? undefined,
       status: PrismaPressReleaseRepository.STATUS_TO_DOMAIN[record.status],
