@@ -45,7 +45,10 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 4000
 
 RUN addgroup -S nodejs && adduser -S nodejs -G nodejs \
+    && mkdir -p /app/uploads/news /app/uploads/press-releases /app/uploads/partners \
     && chown -R nodejs:nodejs /app
+
+VOLUME ["/app/uploads"]
 
 USER nodejs
 
