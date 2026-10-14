@@ -1,6 +1,13 @@
 import { IUserRepository } from '../repositories/IUserRepository';
 import { IPartnerRepository } from '../repositories/IPartnerRepository';
 import { ITrainingApplicationRepository } from '../repositories/ITrainingApplicationRepository';
+import { ITrainingRepository } from '../repositories/ITrainingRepository';
+import { InMemoryTrainingRepository } from '../repositories/InMemoryTrainingRepository';
+import { PrismaTrainingRepository } from '../repositories/PrismaTrainingRepository';
+import { TrainingService } from '../services/TrainingService';
+import { IRegistrationNotifier } from '../services/notifications/IRegistrationNotifier';
+import { NoopRegistrationNotifier } from '../services/notifications/NoopRegistrationNotifier';
+import { EmailRegistrationNotifier } from '../services/notifications/EmailRegistrationNotifier';
 import { InMemoryUserRepository } from '../repositories/InMemoryUserRepository';
 import { InMemoryPartnerRepository } from '../repositories/InMemoryPartnerRepository';
 import { InMemoryTrainingApplicationRepository } from '../repositories/InMemoryTrainingApplicationRepository';
@@ -74,6 +81,10 @@ class CompositionRoot {
     ? new PrismaTrainingApplicationRepository(this.prismaService.client)
     : new InMemoryTrainingApplicationRepository();
 
+  public readonly trainingRepository: ITrainingRepository = this.prismaService
+    ? new PrismaTrainingRepository(this.prismaService.client)
+    : new InMemoryTrainingRepository();
+
   public readonly newsletterRepository: INewsletterRepository = this.prismaService
     ? new PrismaNewsletterRepository(this.prismaService.client)
     : new InMemoryNewsletterRepository();
@@ -98,10 +109,24 @@ class CompositionRoot {
     ? new SmtpEmailService()
     : new ConsoleEmailService();
 
+  // Training booking confirmation emails are OFF unless
+  // TRAINING_CONFIRMATION_EMAIL_ENABLED=true. To detach the feature entirely,
+  // delete src/services/notifications/ and this property (see
+  // TrainingApplicationService's constructor).
+  public readonly registrationNotifier: IRegistrationNotifier = env.trainingConfirmationEmailEnabled
+    ? new EmailRegistrationNotifier(this.emailService)
+    : new NoopRegistrationNotifier();
+
   // Services
   public readonly authService = new AuthService(this.userRepository, this.tokenService);
   public readonly partnerService = new PartnerService(this.partnerRepository);
   public readonly trainingApplicationService = new TrainingApplicationService(
+    this.trainingApplicationRepository,
+    this.trainingRepository,
+    this.registrationNotifier,
+  );
+  public readonly trainingService = new TrainingService(
+    this.trainingRepository,
     this.trainingApplicationRepository,
   );
   public readonly newsletterService = new NewsletterService(
@@ -116,7 +141,10 @@ class CompositionRoot {
   public readonly healthController = new HealthController();
   public readonly authController = new AuthController(this.authService);
   public readonly partnersController = new PartnersController(this.partnerService);
-  public readonly trainingsController = new TrainingsController(this.trainingApplicationService);
+  public readonly trainingsController = new TrainingsController(
+    this.trainingApplicationService,
+    this.trainingService,
+  );
   public readonly newslettersController = new NewslettersController(this.newsletterService);
   public readonly newsController = new NewsController(this.newsService);
   public readonly pressReleaseController = new PressReleaseController(this.pressReleaseService);
@@ -124,5 +152,8 @@ class CompositionRoot {
 
 logger.info(`Persistence layer: ${env.useDatabase ? 'MySQL (Prisma)' : 'in-memory'}`);
 logger.info(`Email transport: ${env.useSmtp ? 'SMTP' : 'console (logged, not delivered)'}`);
+logger.info(
+  `Training confirmation emails: ${env.trainingConfirmationEmailEnabled ? 'enabled' : 'disabled'}`,
+);
 
 export const container = new CompositionRoot();

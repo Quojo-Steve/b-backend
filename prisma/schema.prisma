@@ -71,6 +71,8 @@ model Partner {
 
 model TrainingApplication {
   id                String            @id @default(cuid())
+  cohortId          String?
+  cohort            Cohort?           @relation(fields: [cohortId], references: [id])
   applicantFullName String
   applicantEmail    String
   country           String
@@ -82,9 +84,50 @@ model TrainingApplication {
   submittedAt       DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
+  @@unique([cohortId, applicantEmail])
+  @@index([cohortId])
   @@index([status])
   @@index([country])
   @@map("training_applications")
+}
+
+enum TrainingStatus {
+  PUBLISHED
+  DISABLED
+}
+
+model Training {
+  id          String         @id @default(cuid())
+  title       String
+  description String?        @db.Text
+  startDate   DateTime
+  endDate     DateTime
+  status      TrainingStatus @default(PUBLISHED)
+  createdBy   String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  cohorts     Cohort[]
+
+  @@index([status])
+  @@index([startDate])
+  @@map("trainings")
+}
+
+model Cohort {
+  id           String                @id @default(cuid())
+  trainingId   String
+  name         String
+  startDate    DateTime
+  endDate      DateTime
+  capacity     Int
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  training     Training              @relation(fields: [trainingId], references: [id])
+  applications TrainingApplication[]
+
+  @@unique([trainingId, name])
+  @@index([startDate])
+  @@map("cohorts")
 }
 
 model Newsletter {

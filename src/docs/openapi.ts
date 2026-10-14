@@ -9,6 +9,21 @@
  * Served as raw JSON at GET /openapi.json and rendered interactively by
  * Swagger UI at GET /docs.
  */
+const trainingEnvelope = (description: string, dataProps: Record<string, unknown>) => ({
+  description,
+  content: {
+    'application/json': {
+      schema: {
+        type: 'object',
+        properties: {
+          status: { type: 'string', example: 'success' },
+          data: { type: 'object', properties: dataProps },
+        },
+      },
+    },
+  },
+});
+
 export const openApiDocument = {
   openapi: '3.0.3',
   info: {
@@ -29,7 +44,7 @@ export const openApiDocument = {
     { name: 'Health', description: 'Liveness and readiness checks' },
     { name: 'Auth', description: 'Account registration, login, and session info' },
     { name: 'Partners', description: 'BRACE consortium partner directory' },
-    { name: 'Trainings', description: 'Policy Expert Training Programme applications' },
+    { name: 'Trainings', description: 'Trainings, cohorts and registrations' },
     { name: 'News', description: 'Published and CMS-managed news content' },
     { name: 'Press Releases', description: 'Published and CMS-managed press releases' },
     { name: 'Newsletters', description: 'Newsletter subscription and delivery management' },
@@ -336,10 +351,15 @@ export const openApiDocument = {
         type: 'string',
         enum: ['submitted', 'under_review', 'approved', 'rejected'],
       },
+      TrainingStatus: { type: 'string', enum: ['published', 'disabled'] },
       TrainingApplication: {
         type: 'object',
         properties: {
           id: { type: 'string', example: 'app_1a2b3c4d' },
+          cohortId: { type: 'string', nullable: true },
+          cohortName: { type: 'string', nullable: true, description: 'Included in staff list/get responses.' },
+          trainingId: { type: 'string', nullable: true, description: 'Included in staff list/get responses.' },
+          trainingTitle: { type: 'string', nullable: true, description: 'Included in staff list/get responses.' },
           applicantFullName: { type: 'string' },
           applicantEmail: { type: 'string', format: 'email' },
           country: { type: 'string' },
@@ -354,14 +374,105 @@ export const openApiDocument = {
       },
       SubmitApplicationRequest: {
         type: 'object',
-        required: ['applicantFullName', 'applicantEmail', 'country', 'motivation'],
+        required: ['cohortId', 'applicantFullName', 'applicantEmail', 'country', 'motivation'],
         properties: {
+          cohortId: { type: 'string', example: 'clx1abc2d0000xyz' },
           applicantFullName: { type: 'string' },
           applicantEmail: { type: 'string', format: 'email' },
           country: { type: 'string' },
           organisation: { type: 'string' },
           motivation: { type: 'string', minLength: 20, maxLength: 2000 },
         },
+      },
+      Cohort: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          trainingId: { type: 'string' },
+          name: { type: 'string', example: 'Cohort 1' },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+          capacity: { type: 'integer', description: 'Application limit for this cohort.', example: 30 },
+          registeredCount: { type: 'integer', description: 'Registrations that are not rejected.', example: 12 },
+          spotsLeft: { type: 'integer', example: 18 },
+          registrationOpen: {
+            type: 'boolean',
+            description: 'False once the cohort has started, the cohort is full, or the training is disabled.',
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Training: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string', example: 'Policy Expert Training Programme' },
+          description: { type: 'string', nullable: true },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+          status: { $ref: '#/components/schemas/TrainingStatus' },
+          cohortCount: { type: 'integer', example: 3 },
+          cohorts: { type: 'array', items: { $ref: '#/components/schemas/Cohort' } },
+          createdBy: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CohortInput: {
+        type: 'object',
+        required: ['name', 'startDate', 'endDate', 'capacity'],
+        properties: {
+          name: { type: 'string', minLength: 2, example: 'Cohort 1' },
+          startDate: { type: 'string', format: 'date-time', example: '2026-11-03T08:00:00.000Z' },
+          endDate: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Must be after startDate and within the training dates.',
+            example: '2026-11-14T17:00:00.000Z',
+          },
+          capacity: { type: 'integer', minimum: 1, description: 'Application limit.', example: 30 },
+        },
+      },
+      CreateTrainingRequest: {
+        type: 'object',
+        required: ['title', 'startDate', 'endDate', 'cohorts'],
+        properties: {
+          title: { type: 'string', minLength: 3, example: 'Policy Expert Training Programme' },
+          description: { type: 'string', maxLength: 5000 },
+          startDate: { type: 'string', format: 'date-time', example: '2026-11-01T00:00:00.000Z' },
+          endDate: { type: 'string', format: 'date-time', example: '2027-02-28T23:59:59.000Z' },
+          cohorts: {
+            type: 'array',
+            minItems: 1,
+            maxItems: 50,
+            description: 'One entry per cohort; the array length is the number of cohorts.',
+            items: { $ref: '#/components/schemas/CohortInput' },
+          },
+        },
+      },
+      UpdateTrainingRequest: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', minLength: 3 },
+          description: { type: 'string', maxLength: 5000 },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+        },
+      },
+      UpdateCohortRequest: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 2 },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+          capacity: { type: 'integer', minimum: 1, description: 'Cannot be lower than the current registered count.' },
+        },
+      },
+      UpdateTrainingStatusRequest: {
+        type: 'object',
+        required: ['status'],
+        properties: { status: { $ref: '#/components/schemas/TrainingStatus' } },
       },
       ReviewApplicationRequest: {
         type: 'object',
@@ -776,7 +887,9 @@ export const openApiDocument = {
     '/trainings/applications': {
       post: {
         tags: ['Trainings'],
-        summary: 'Submit a training-programme application (public)',
+        summary: 'Register for a training cohort (public)',
+        description:
+          'Fails with 409 if the cohort has already started, is full, or the email is already registered for this training.',
         requestBody: {
           required: true,
           content: {
@@ -802,13 +915,20 @@ export const openApiDocument = {
             },
           },
           '400': { $ref: '#/components/responses/ValidationError' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
         },
       },
       get: {
         tags: ['Trainings'],
-        summary: 'List all training applications (staff only)',
+        summary: 'List training registrations (staff only)',
         security: [{ bearerAuth: [] }],
-        description: 'Requires role super_admin, country_coordinator, or technical_reviewer.',
+        description:
+          'Requires role super_admin, web_manager, country_coordinator, or technical_reviewer. Optionally filter by cohort or training.',
+        parameters: [
+          { name: 'cohortId', in: 'query', required: false, schema: { type: 'string' } },
+          { name: 'trainingId', in: 'query', required: false, schema: { type: 'string' } },
+        ],
         responses: {
           '200': {
             description: 'List of applications.',
@@ -840,8 +960,9 @@ export const openApiDocument = {
     '/trainings/applications/{id}': {
       get: {
         tags: ['Trainings'],
-        summary: 'Get a single training application by id (staff only)',
+        summary: 'Get a single training registration by id (staff only)',
         security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin, web_manager, country_coordinator, or technical_reviewer.',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
         responses: {
           '200': {
@@ -898,6 +1019,141 @@ export const openApiDocument = {
               },
             },
           },
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+    },
+    '/trainings': {
+      get: {
+        tags: ['Trainings'],
+        summary: 'List published trainings with their cohorts (public)',
+        responses: {
+          '200': trainingEnvelope('Published trainings.', {
+            trainings: { type: 'array', items: { $ref: '#/components/schemas/Training' } },
+          }),
+        },
+      },
+      post: {
+        tags: ['Trainings'],
+        summary: 'Create a training together with its cohorts',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager. Every cohort must fall within the training dates.',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CreateTrainingRequest' } } },
+        },
+        responses: {
+          '201': trainingEnvelope('Training created.', { training: { $ref: '#/components/schemas/Training' } }),
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+    },
+    '/trainings/admin/all': {
+      get: {
+        tags: ['Trainings'],
+        summary: 'List every training, including disabled ones (admin)',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager.',
+        responses: {
+          '200': trainingEnvelope('All trainings.', {
+            trainings: { type: 'array', items: { $ref: '#/components/schemas/Training' } },
+          }),
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+        },
+      },
+    },
+    '/trainings/{id}': {
+      get: {
+        tags: ['Trainings'],
+        summary: 'Get a published training with its cohorts (public)',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': trainingEnvelope('The training.', { training: { $ref: '#/components/schemas/Training' } }),
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+      patch: {
+        tags: ['Trainings'],
+        summary: 'Update a training',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager. New dates must still contain every existing cohort.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateTrainingRequest' } } },
+        },
+        responses: {
+          '200': trainingEnvelope('Training updated.', { training: { $ref: '#/components/schemas/Training' } }),
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/trainings/{id}/status': {
+      patch: {
+        tags: ['Trainings'],
+        summary: 'Publish or disable a training',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager. Disabled trainings cannot be registered for.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateTrainingStatusRequest' } } },
+        },
+        responses: {
+          '200': trainingEnvelope('Status updated.', { training: { $ref: '#/components/schemas/Training' } }),
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+        },
+      },
+    },
+    '/trainings/{id}/cohorts': {
+      post: {
+        tags: ['Trainings'],
+        summary: 'Add a cohort to an existing training',
+        security: [{ bearerAuth: [] }],
+        description: 'Requires role super_admin or web_manager. Cohort dates must fall within the training dates.',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/CohortInput' } } },
+        },
+        responses: {
+          '201': trainingEnvelope('Cohort created.', { cohort: { $ref: '#/components/schemas/Cohort' } }),
+          '400': { $ref: '#/components/responses/ValidationError' },
+          '401': { $ref: '#/components/responses/Unauthorized' },
+          '403': { $ref: '#/components/responses/Forbidden' },
+          '404': { $ref: '#/components/responses/NotFound' },
+          '409': { $ref: '#/components/responses/Conflict' },
+        },
+      },
+    },
+    '/trainings/cohorts/{cohortId}': {
+      patch: {
+        tags: ['Trainings'],
+        summary: 'Update a cohort',
+        security: [{ bearerAuth: [] }],
+        description:
+          'Requires role super_admin or web_manager. Dates must stay within the training dates; the application limit cannot drop below the number already registered.',
+        parameters: [{ name: 'cohortId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateCohortRequest' } } },
+        },
+        responses: {
+          '200': trainingEnvelope('Cohort updated.', { cohort: { $ref: '#/components/schemas/Cohort' } }),
           '400': { $ref: '#/components/responses/ValidationError' },
           '401': { $ref: '#/components/responses/Unauthorized' },
           '403': { $ref: '#/components/responses/Forbidden' },

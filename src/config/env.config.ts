@@ -20,6 +20,7 @@ class EnvironmentConfig {
   public readonly smtpUser?: string;
   public readonly smtpPassword?: string;
   public readonly mailFrom: string;
+  public readonly trainingConfirmationEmailEnabled: boolean;
 
   constructor() {
     this.nodeEnv = this.getOptional('NODE_ENV', 'development');
@@ -34,6 +35,9 @@ class EnvironmentConfig {
     this.smtpUser = process.env.SMTP_USER || undefined;
     this.smtpPassword = process.env.SMTP_PASSWORD || undefined;
     this.mailFrom = this.getOptional('MAIL_FROM', 'BRACE Digital Platform <no-reply@brace-initiative.org>');
+    // Off by default: booking confirmation emails need sign-off before going live.
+    this.trainingConfirmationEmailEnabled =
+      this.getOptional('TRAINING_CONFIRMATION_EMAIL_ENABLED', 'false') === 'true';
   }
 
   /**

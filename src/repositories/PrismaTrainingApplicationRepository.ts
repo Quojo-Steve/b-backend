@@ -1,6 +1,12 @@
 import type { PrismaClient, ApplicationStatus as PrismaApplicationStatus } from '@prisma/client';
 import { ApplicationStatus, ITrainingApplication } from '../types/training.types';
-import { ITrainingApplicationRepository } from './ITrainingApplicationRepository';
+import {
+  ApplicationFilter,
+  ITrainingApplicationRepository,
+  NewRegistration,
+  RegistrationLimits,
+  RegistrationOutcome,
+} from './ITrainingApplicationRepository';
 
 /**
  * MySQL-backed implementation of ITrainingApplicationRepository.
@@ -32,6 +38,7 @@ export class PrismaTrainingApplicationRepository implements ITrainingApplication
   ): Promise<ITrainingApplication> {
     const record = await this.prisma.trainingApplication.create({
       data: {
+        cohortId: applicationData.cohortId,
         applicantFullName: applicationData.applicantFullName,
         applicantEmail: applicationData.applicantEmail,
         country: applicationData.country,
@@ -45,8 +52,69 @@ export class PrismaTrainingApplicationRepository implements ITrainingApplication
     return this.toDomain(record);
   }
 
-  public async findAll(): Promise<ITrainingApplication[]> {
+  public async createInCohort(
+    data: NewRegistration,
+    limits: RegistrationLimits,
+  ): Promise<RegistrationOutcome> {
+    return this.prisma.$transaction(async (tx): Promise<RegistrationOutcome> => {
+      // Row lock on the cohort: concurrent registrations for the same cohort queue
+      // up here, so the count below is always current and the limit can't be exceeded.
+      await tx.$queryRaw`SELECT id FROM cohorts WHERE id = ${data.cohortId} FOR UPDATE`;
+
+      const duplicate = await tx.trainingApplication.findFirst({
+        where: {
+          applicantEmail: data.applicantEmail,
+          cohortId: { in: limits.siblingCohortIds },
+        },
+        select: { id: true },
+      });
+      if (duplicate) {
+        return { outcome: 'duplicate' };
+      }
+
+      const taken = await tx.trainingApplication.count({
+        where: { cohortId: data.cohortId, status: { not: 'REJECTED' } },
+      });
+      if (taken >= limits.capacity) {
+        return { outcome: 'cohort_full' };
+      }
+
+      const record = await tx.trainingApplication.create({
+        data: {
+          cohortId: data.cohortId,
+          applicantFullName: data.applicantFullName,
+          applicantEmail: data.applicantEmail,
+          country: data.country,
+          organisation: data.organisation,
+          motivation: data.motivation,
+          status: PrismaTrainingApplicationRepository.STATUS_TO_PRISMA[data.status],
+        },
+      });
+      return { outcome: 'created', application: this.toDomain(record) };
+    });
+  }
+
+  public async countActiveByCohorts(cohortIds: string[]): Promise<Record<string, number>> {
+    if (cohortIds.length === 0) {
+      return {};
+    }
+    const groups = await this.prisma.trainingApplication.groupBy({
+      by: ['cohortId'],
+      where: { cohortId: { in: cohortIds }, status: { not: 'REJECTED' } },
+      _count: { _all: true },
+    });
+    const counts: Record<string, number> = {};
+    for (const group of groups) {
+      if (group.cohortId) {
+        counts[group.cohortId] = group._count._all;
+      }
+    }
+    return counts;
+  }
+
+  public async findAll(filter: ApplicationFilter = {}): Promise<ITrainingApplication[]> {
     const records = await this.prisma.trainingApplication.findMany({
+      where: filter.cohortIds ? { cohortId: { in: filter.cohortIds } } : undefined,
       orderBy: { submittedAt: 'desc' },
     });
     return records.map((record) => this.toDomain(record));
@@ -82,6 +150,7 @@ export class PrismaTrainingApplicationRepository implements ITrainingApplication
 
   private toDomain(record: {
     id: string;
+    cohortId: string | null;
     applicantFullName: string;
     applicantEmail: string;
     country: string;
@@ -95,6 +164,7 @@ export class PrismaTrainingApplicationRepository implements ITrainingApplication
   }): ITrainingApplication {
     return {
       id: record.id,
+      cohortId: record.cohortId ?? undefined,
       applicantFullName: record.applicantFullName,
       applicantEmail: record.applicantEmail,
       country: record.country,
