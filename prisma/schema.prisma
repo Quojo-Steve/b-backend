@@ -58,10 +58,10 @@ model Partner {
   id            String  @id
   name          String
   country       String
-  about         String
-  aboutFr       String
-  description   String  @db.Text
-  descriptionFr String  @db.Text
+  about         String  @db.MediumText
+  aboutFr       String? @db.MediumText
+  description   String  @db.MediumText
+  descriptionFr String? @db.MediumText
   websiteUrl    String?
   logoUrl       String?
   isActive      Boolean @default(true)
@@ -77,10 +77,10 @@ model TrainingApplication {
   applicantEmail    String
   country           String
   organisation      String?
-  motivation        String            @db.Text
+  motivation        String            @db.MediumText
   status            ApplicationStatus @default(SUBMITTED)
   reviewedBy        String?
-  reviewNotes       String?           @db.Text
+  reviewNotes       String?           @db.MediumText
   submittedAt       DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -99,7 +99,7 @@ enum TrainingStatus {
 model Training {
   id          String         @id @default(cuid())
   title       String
-  description String?        @db.Text
+  description String?        @db.MediumText
   startDate   DateTime
   endDate     DateTime
   status      TrainingStatus @default(PUBLISHED)
@@ -133,7 +133,7 @@ model Cohort {
 model Newsletter {
   id        String    @id @default(cuid())
   title     String
-  bodyHtml  String    @db.Text
+  bodyHtml  String    @db.MediumText
   createdBy String
   sentAt    DateTime?
   createdAt DateTime  @default(now())
@@ -159,15 +159,15 @@ enum NewsStatus {
 model News {
   id            String     @id @default(cuid())
   title         String
-  titleFr       String
+  titleFr       String?
   tag           String
-  tagFr         String
+  tagFr         String?
   pillar        String
-  pillarFr      String
-  note          String     @db.Text
-  noteFr        String     @db.Text
-  body          String?    @db.Text
-  bodyFr        String?    @db.Text
+  pillarFr      String?
+  note          String     @db.MediumText
+  noteFr        String?    @db.MediumText
+  body          String?    @db.MediumText
+  bodyFr        String?    @db.MediumText
   imageUrl      String?
   status        NewsStatus @default(PUBLISHED)
   publishedDate DateTime
@@ -188,9 +188,9 @@ enum PressReleaseStatus {
 model PressRelease {
   id           String             @id @default(cuid())
   title        String
-  titleFr      String
-  summary      String?
-  summaryFr    String?            @db.Text
+  titleFr      String?
+  summary      String?            @db.MediumText
+  summaryFr    String?            @db.MediumText
   documentUrl  String?
   documentName String?
   status       PressReleaseStatus @default(PUBLISHED)

@@ -80,7 +80,7 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
     id: string;
     title: string;
     summary: string | null;
-    titleFr: string;
+    titleFr: string | null;
     summaryFr: string | null;
     documentUrl: string | null;
     documentName: string | null;
@@ -94,7 +94,7 @@ export class PrismaPressReleaseRepository implements IPressReleaseRepository {
       id: record.id,
       title: record.title,
       summary: record.summary ?? undefined,
-      titleFr: record.titleFr,
+      titleFr: record.titleFr ?? undefined,
       summaryFr: record.summaryFr ?? undefined,
       documentUrl: record.documentUrl ?? undefined,
       documentName: record.documentName ?? undefined,

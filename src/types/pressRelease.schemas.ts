@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { PressReleaseStatus } from './pressRelease.types';
+import { frenchField } from './frenchField';
 
 export const createPressReleaseSchema = z.object({
   title: z.string().min(3, 'Title is required.'),
-  titleFr: z.string().min(3, 'French title is required.'),
-  summary: z.string().min(5, 'Summary is required.').max(1000, 'Summary must be 1000 characters or fewer.').optional(),
-  summaryFr: z.string().min(5, 'French summary is required.').max(1000, 'French summary must be 1000 characters or fewer.').optional(),
+  titleFr: frenchField(z.string()),
+  summary: z.string().min(5, 'Summary is required.').max(50000, 'Summary must be 50000 characters or fewer.').optional(),
+  summaryFr: frenchField(z.string().max(50000, 'French summary must be 50000 characters or fewer.')),
   releaseDate: z.coerce.date().optional(),
 });
 

@@ -47,8 +47,8 @@ export class App {
       }
     });
     this.instance.use(cors({ origin: env.corsOrigin }));
-    this.instance.use(express.json());
-    this.instance.use(express.urlencoded({ extended: true }));
+    this.instance.use(express.json({ limit: '1mb' }));
+    this.instance.use(express.urlencoded({ extended: true, limit: '1mb' }));
     this.instance.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
     // Structured, per-request audit log (method, path, status, duration,

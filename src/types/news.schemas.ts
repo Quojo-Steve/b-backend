@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { NewsStatus } from './news.types';
+import { frenchField } from './frenchField';
 
 /**
  * Requests hit this endpoint as multipart/form-data (to carry the optional
@@ -8,15 +9,15 @@ import { NewsStatus } from './news.types';
  */
 export const createNewsSchema = z.object({
   title: z.string().min(3, 'Title is required.'),
-  titleFr: z.string().min(3, 'French title is required.'),
+  titleFr: frenchField(z.string()),
   tag: z.string().min(2, 'Tag is required.'),
-  tagFr: z.string().min(2, 'French tag is required.'),
+  tagFr: frenchField(z.string()),
   pillar: z.string().min(2, 'Pillar is required.'),
-  pillarFr: z.string().min(2, 'French pillar is required.'),
-  note: z.string().min(5, 'Note is required.').max(500, 'Note must be 500 characters or fewer.'),
-  noteFr: z.string().min(5, 'French note is required.').max(500, 'French note must be 500 characters or fewer.'),
+  pillarFr: frenchField(z.string()),
+  note: z.string().min(5, 'Note is required.').max(50000, 'Note must be 50000 characters or fewer.'),
+  noteFr: frenchField(z.string().max(50000, 'French note must be 50000 characters or fewer.')),
   body: z.string().optional(),
-  bodyFr: z.string().optional(),
+  bodyFr: frenchField(z.string()),
   publishedDate: z.coerce.date().optional(),
 });
 export type CreateNewsDto = z.infer<typeof createNewsSchema>;

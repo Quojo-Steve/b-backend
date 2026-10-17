@@ -11,7 +11,7 @@ export enum PressReleaseStatus {
 export interface IPressRelease {
   id: string;
   title: string;
-  titleFr: string;
+  titleFr?: string;
   summary?: string;
   summaryFr?: string;
   documentUrl?: string;

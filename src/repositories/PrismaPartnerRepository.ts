@@ -56,9 +56,9 @@ export class PrismaPartnerRepository implements IPartnerRepository {
     name: string;
     country: string;
     about: string;
-    aboutFr: string;
+    aboutFr: string | null;
     description: string;
-    descriptionFr: string;
+    descriptionFr: string | null;
     websiteUrl: string | null;
     logoUrl: string | null;
     isActive: boolean;
@@ -68,9 +68,9 @@ export class PrismaPartnerRepository implements IPartnerRepository {
       name: record.name,
       country: record.country,
       about: record.about,
-      aboutFr: record.aboutFr,
+      aboutFr: record.aboutFr ?? undefined,
       description: record.description,
-      descriptionFr: record.descriptionFr,
+      descriptionFr: record.descriptionFr ?? undefined,
       websiteUrl: record.websiteUrl ?? undefined,
       logoUrl: record.logoUrl ?? undefined,
       isActive: record.isActive,

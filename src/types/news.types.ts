@@ -11,13 +11,13 @@ export enum NewsStatus {
 export interface INews {
   id: string;
   title: string;
-  titleFr: string;
+  titleFr?: string;
   tag: string; // e.g. "Tanzania", "Programme"
-  tagFr: string;
+  tagFr?: string;
   pillar: string; // e.g. "Country support", "Training"
-  pillarFr: string;
+  pillarFr?: string;
   note: string; // short summary shown on the card
-  noteFr: string;
+  noteFr?: string;
   body?: string;
   bodyFr?: string;
   imageUrl?: string; // relative URL under /uploads, e.g. "/uploads/news/172-abc.jpg"

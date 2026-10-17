@@ -99,10 +99,10 @@ export class PrismaNewsRepository implements INewsRepository {
     pillar: string;
     note: string;
     body: string | null;
-    titleFr: string;
-    tagFr: string;
-    pillarFr: string;
-    noteFr: string;
+    titleFr: string | null;
+    tagFr: string | null;
+    pillarFr: string | null;
+    noteFr: string | null;
     bodyFr: string | null;
     imageUrl: string | null;
     status: PrismaNewsStatus;
@@ -118,10 +118,10 @@ export class PrismaNewsRepository implements INewsRepository {
       pillar: record.pillar,
       note: record.note,
       body: record.body ?? undefined,
-      titleFr: record.titleFr,
-      tagFr: record.tagFr,
-      pillarFr: record.pillarFr,
-      noteFr: record.noteFr,
+      titleFr: record.titleFr ?? undefined,
+      tagFr: record.tagFr ?? undefined,
+      pillarFr: record.pillarFr ?? undefined,
+      noteFr: record.noteFr ?? undefined,
       bodyFr: record.bodyFr ?? undefined,
       imageUrl: record.imageUrl ?? undefined,
       status: PrismaNewsRepository.STATUS_TO_DOMAIN[record.status],

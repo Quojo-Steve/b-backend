@@ -10,7 +10,7 @@ export const submitApplicationSchema = z.object({
   motivation: z
     .string()
     .min(20, 'Please provide at least a short paragraph on your motivation.')
-    .max(2000, 'Motivation statement must be under 2000 characters.'),
+    .max(50000, 'Motivation statement must be 50000 characters or fewer.'),
 });
 
 export type SubmitApplicationDto = z.infer<typeof submitApplicationSchema>;
@@ -19,7 +19,7 @@ export const reviewApplicationSchema = z.object({
   status: z.enum([ApplicationStatus.APPROVED, ApplicationStatus.REJECTED], {
     errorMap: () => ({ message: 'Status must be either "approved" or "rejected".' }),
   }),
-  reviewNotes: z.string().max(2000).optional(),
+  reviewNotes: z.string().max(50000).optional(),
 });
 
 export type ReviewApplicationDto = z.infer<typeof reviewApplicationSchema>;
@@ -59,7 +59,7 @@ export type UpdateCohortDto = z.infer<typeof updateCohortSchema>;
 
 const trainingBase = z.object({
   title: z.string().trim().min(3, 'Title is required.'),
-  description: z.string().max(5000).optional(),
+  description: z.string().max(50000).optional(),
   startDate: dateField('Training start date'),
   endDate: dateField('Training end date'),
 });
